@@ -41,7 +41,7 @@ type SliderMoveEvent struct {
 	PercentValue float32
 }
 
-var expectedLinePattern = regexp.MustCompile(`^\d{1,4}(\|\d{1,4})*\r\n$`)
+var expectedLinePattern = regexp.MustCompile(`^(-?\d{1,4}(\|(-?\d{1,4}))*\r\n)$`)
 
 // NewSerialIO creates a SerialIO instance that uses the provided deej
 // instance's connection info to establish communications with the arduino chip
@@ -250,7 +250,7 @@ func (sio *SerialIO) handleLine(logger *zap.SugaredLogger, line string) {
 
 		// reset everything to be an impossible value to force the slider move event later
 		for idx := range sio.currentSliderPercentValues {
-			sio.currentSliderPercentValues[idx] = -1.0
+			sio.currentSliderPercentValues[idx] = -1000.0
 		}
 	}
 
@@ -269,25 +269,27 @@ func (sio *SerialIO) handleLine(logger *zap.SugaredLogger, line string) {
 		}
 
 		// map the value from raw to a "dirty" float between 0 and 1 (e.g. 0.15451...)
-		dirtyFloat := float32(number) / 1023.0
+		//dirtyFloat := float32(number) / 1023.0
 
 		// normalize it to an actual volume scalar between 0.0 and 1.0 with 2 points of precision
-		normalizedScalar := util.NormalizeScalar(dirtyFloat)
+		//normalizedScalar := util.NormalizeScalar(dirtyFloat)
 
 		// if sliders are inverted, take the complement of 1.0
-		if sio.deej.config.InvertSliders {
-			normalizedScalar = 1 - normalizedScalar
-		}
+		//if sio.deej.config.InvertSliders {
+		//	normalizedScalar = 1 - normalizedScalar
+		//}
+
+		percentChange := float32(number) / 100
 
 		// check if it changes the desired state (could just be a jumpy raw slider value)
-		if util.SignificantlyDifferent(sio.currentSliderPercentValues[sliderIdx], normalizedScalar, sio.deej.config.NoiseReductionLevel) {
+		if util.SignificantlyDifferent(sio.currentSliderPercentValues[sliderIdx], percentChange, sio.deej.config.NoiseReductionLevel) {
 
 			// if it does, update the saved value and create a move event
-			sio.currentSliderPercentValues[sliderIdx] = normalizedScalar
+			sio.currentSliderPercentValues[sliderIdx] = percentChange
 
 			moveEvents = append(moveEvents, SliderMoveEvent{
 				SliderID:     sliderIdx,
-				PercentValue: normalizedScalar,
+				PercentValue: percentChange,
 			})
 
 			if sio.deej.Verbose() {
