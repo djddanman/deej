@@ -1,14 +1,14 @@
 #include "pio_encoder.h"
 #include "Adafruit_TinyUSB.h"
 
-const int NUM_SLIDERS = 5; // Change to 5 if uncommenting last encoder in array
+const int NUM_SLIDERS = 4; // Change to 5 if uncommenting last encoder in array
 
 PioEncoder encoders[NUM_SLIDERS] = {
     PioEncoder(0, pio0),
     PioEncoder(2, pio0),
     PioEncoder(4, pio0),
     PioEncoder(6, pio0),
-    PioEncoder(8, pio1) // Works every time if this line is commented
+    //PioEncoder(8, pio1) // Works every time if this line is commented
 };
 
 int EncoderValues[NUM_SLIDERS];
